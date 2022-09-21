@@ -6,6 +6,8 @@
 #include <Adafruit_Sensor.h>
 #include <bluefruit.h>
 #include <PDM.h>
+#include <SPI.h>
+#include <SD.h>
 
 Adafruit_APDS9960 apds9960; // proximity, light, color, gesture
 Adafruit_BMP280 bmp280;     // temperautre, barometric pressure
@@ -37,14 +39,12 @@ BLEUuid           OTHER_UUID_SERV("00000300-1212-EFDE-1523-785FEABCD123");
 BLEService        otherServ(OTHER_UUID_SERV);
 BLEUuid           HR_UUID_CHAR("00000301-1212-EFDE-1523-785FEABCD123");
 BLECharacteristic hrChar(HR_UUID_CHAR);
-BLEUuid           SPO2_UUID_CHAR("00000302-1212-EFDE-1523-785FEABCD123");
-BLECharacteristic spo2Char(HR_UUID_CHAR);
-BLEUuid           GSR_UUID_CHAR("00000303-1212-EFDE-1523-785FEABCD123");
+BLEUuid           GSR_UUID_CHAR("00000302-1212-EFDE-1523-785FEABCD123");
 BLECharacteristic gsrChar(GSR_UUID_CHAR);
-
 
 char buf[64];
 char temp[32];
+
 uint8_t proximity;
 uint16_t r, g, b, c;
 float temperature, pressure, altitude;
@@ -59,11 +59,12 @@ short sampleBuffer[256];  // buffer to read samples into, each sample is 16-bits
 volatile int samplesRead; // number of samples read
 
 const int GSR=A0;
-const int gsrBufferLength=10;
-const int gsrUpdateLength=2;
-uint16_t gsrBuffer[gsrBufferLength];
+const int bufferLength=10;
+const int updateLength=2;
+uint16_t gsrBuffer[bufferLength];
 int gsr_average=0;
 
+const int chipSelect = 10;
 
 // ==========================================
 // STARTUP BLOCK
@@ -107,10 +108,6 @@ void setupChars() {
   hrChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
   hrChar.begin();
 
-  spo2Char.setProperties(CHR_PROPS_NOTIFY);
-  spo2Char.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-  spo2Char.begin();
-
   gsrChar.setProperties(CHR_PROPS_NOTIFY);
   gsrChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
   gsrChar.begin();
@@ -143,6 +140,8 @@ void setupBluetooth() {
 
 void setup(void) {
   Serial.begin(115200);
+  // while (!Serial) delay(10);
+  // Serial.println("Feather Sense Sensor Demo");
 
   // initialize the sensors
   apds9960.begin();
@@ -160,11 +159,17 @@ void setup(void) {
     gsrBuffer[i] = analogRead(GSR);
   }
 
+  Serial.print("Initializing SD card... ");
+
+  if (!SD.begin(chipSelect)) {
+    Serial.println("Card failed, or not present");
+    delay(5000);
+  } else {
+    Serial.println("card initialized.");
+  }
+
   setupBluetooth();
 }
-
-
-
 
 // ==========================================
 // RUNNING BLOCK
@@ -279,23 +284,20 @@ void loop(void) {
   gyroChar.notify(buf, strlen(buf));
 
   char snum[5];
-
   memset(buf,0,strlen(buf));
+  itoa(rand() % 1000, snum, 10);
+  strcat(buf, snum);
+  strcat(buf, " ");
+  itoa(rand() % 1000, snum, 10);
+  strcat(buf, snum);
+  strcat(buf, " ");
   itoa(rand() % 1000, snum, 10);
   strcat(buf, snum);
   strcat(buf, " ");
   itoa(rand() % 1000, snum, 10);
   strcat(buf, snum);
   hrChar.notify(buf, strlen(buf));
-
-  memset(buf,0,strlen(buf));
-  itoa(rand() % 1000, snum, 10);
-  strcat(buf, snum);
-  strcat(buf, " ");
-  itoa(rand() % 1000, snum, 10);
-  strcat(buf, snum);
-  spo2Char.notify(buf, strlen(buf));
-
+  
   Serial.print("GSR: ");
   Serial.println(gsr_average);
   memset(buf,0,strlen(buf));
@@ -341,22 +343,22 @@ void onPDMdata() {
 int getGSR() {
   long sum = 0;
 
-  for (byte i = gsrUpdateLength; i < gsrBufferLength; i++)
+  for (byte i = updateLength; i < bufferLength; i++)
   {
-    gsrBuffer[i - gsrUpdateLength] = gsrBuffer[i];
+    gsrBuffer[i - updateLength] = gsrBuffer[i];
   }
 
-  for (byte i = (gsrBufferLength - gsrUpdateLength); i < gsrBufferLength; i++)
+  for (byte i = (bufferLength - updateLength); i < bufferLength; i++)
   {
     gsrBuffer[i] = analogRead(GSR);
   }
 
-  for (byte i = 0; i < gsrBufferLength; i++)
+  for (byte i = 0; i < bufferLength; i++)
   {
     sum += gsrBuffer[i];
     delay(5);
   }
-  return sum / gsrBufferLength;
+  return sum / bufferLength;
 }
 
 void connect_callback(uint16_t conn_handle)
