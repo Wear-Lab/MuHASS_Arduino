@@ -37,8 +37,8 @@ BLECharacteristic gyroChar(GYRO_UUID_CHAR);
 
 BLEUuid           OTHER_UUID_SERV("00000300-1212-EFDE-1523-785FEABCD123");
 BLEService        otherServ(OTHER_UUID_SERV);
-BLEUuid           HR_UUID_CHAR("00000301-1212-EFDE-1523-785FEABCD123");
-BLECharacteristic hrChar(HR_UUID_CHAR);
+BLEUuid           PPG_UUID_CHAR("00000301-1212-EFDE-1523-785FEABCD123");
+BLECharacteristic ppgChar(PPG_UUID_CHAR);
 BLEUuid           GSR_UUID_CHAR("00000302-1212-EFDE-1523-785FEABCD123");
 BLECharacteristic gsrChar(GSR_UUID_CHAR);
 
@@ -104,9 +104,9 @@ void setupChars() {
 
   otherServ.begin();
 
-  hrChar.setProperties(CHR_PROPS_NOTIFY);
-  hrChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-  hrChar.begin();
+  ppgChar.setProperties(CHR_PROPS_NOTIFY);
+  ppgChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  ppgChar.begin();
 
   gsrChar.setProperties(CHR_PROPS_NOTIFY);
   gsrChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
@@ -296,7 +296,7 @@ void loop(void) {
   strcat(buf, " ");
   itoa(rand() % 1000, snum, 10);
   strcat(buf, snum);
-  hrChar.notify(buf, strlen(buf));
+  ppgChar.notify(buf, strlen(buf));
   
   Serial.print("GSR: ");
   Serial.println(gsr_average);
