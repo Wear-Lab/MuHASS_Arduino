@@ -47,8 +47,8 @@ BLECharacteristic ppgChar(PPG_UUID_CHAR);
 BLEUuid           GSR_UUID_CHAR("00000403-1212-EFDE-1523-785FEABCD123");
 BLECharacteristic gsrChar(GSR_UUID_CHAR);
 
-char buf[64];
-char temp[32];
+const uint16_t max_len = 20;
+char buf[max_len];
 
 uint8_t proximity;
 uint16_t r, g, b, c;
@@ -79,48 +79,58 @@ void setupChars() {
   
   proxChar.setProperties(CHR_PROPS_NOTIFY);
   proxChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  proxChar.setMaxLen(max_len);
   proxChar.begin();
 
   rgbChar.setProperties(CHR_PROPS_NOTIFY);
   rgbChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  rgbChar.setMaxLen(max_len);
   rgbChar.begin();
 
   envServ.begin();
 
   baroChar.setProperties(CHR_PROPS_NOTIFY);
   baroChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  baroChar.setMaxLen(max_len);
   baroChar.begin();
 
   humidChar.setProperties(CHR_PROPS_NOTIFY);
   humidChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  humidChar.setMaxLen(max_len);
   humidChar.begin();
 
   motionServ.begin();
   
   magChar.setProperties(CHR_PROPS_NOTIFY);
   magChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  magChar.setMaxLen(max_len);
   magChar.begin();
 
   accelChar.setProperties(CHR_PROPS_NOTIFY);
   accelChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  accelChar.setMaxLen(max_len);
   accelChar.begin();
 
   gyroChar.setProperties(CHR_PROPS_NOTIFY);
   gyroChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  gyroChar.setMaxLen(max_len);
   gyroChar.begin();
 
   otherServ.begin();
 
   micChar.setProperties(CHR_PROPS_NOTIFY);
   micChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  micChar.setMaxLen(max_len);
   micChar.begin();
 
   ppgChar.setProperties(CHR_PROPS_NOTIFY);
   ppgChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  ppgChar.setMaxLen(max_len);
   ppgChar.begin();
 
   gsrChar.setProperties(CHR_PROPS_NOTIFY);
   gsrChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  gsrChar.setMaxLen(max_len);
   gsrChar.begin();
 }
 
