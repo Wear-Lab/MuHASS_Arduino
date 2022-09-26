@@ -15,35 +15,40 @@ Adafruit_LIS3MDL lis3mdl;   // magnetometer
 Adafruit_LSM6DS33 lsm6ds33; // accelerometer, gyroscope
 Adafruit_SHT31 sht30;       // humidity
 
-BLEUuid           APDS_UUID_SERV("00000100-1212-EFDE-1523-785FEABCD123");
-BLEService        adpsServ(APDS_UUID_SERV);
-BLEUuid           PM_UUID_CHAR("00000101-1212-EFDE-1523-785FEABCD123");
-BLECharacteristic pmChar(PM_UUID_CHAR);
+BLEUuid           OPTICAL_UUID_SERV("00000100-1212-EFDE-1523-785FEABCD123");
+BLEService        opticalServ(OPTICAL_UUID_SERV);
+BLEUuid           PROX_UUID_CHAR("00000101-1212-EFDE-1523-785FEABCD123");
+BLECharacteristic proxChar(PROX_UUID_CHAR);
 BLEUuid           RGB_UUID_CHAR("00000102-1212-EFDE-1523-785FEABCD123");
 BLECharacteristic rgbChar(RGB_UUID_CHAR);
-BLEUuid           TAH_UUID_CHAR("00000103-1212-EFDE-1523-785FEABCD123");
-BLECharacteristic tahChar(TAH_UUID_CHAR);
-BLEUuid           PRES_UUID_CHAR("00000104-1212-EFDE-1523-785FEABCD123");
-BLECharacteristic presChar(PRES_UUID_CHAR);
 
-BLEUuid           POS_UUID_SERV("00000200-1212-EFDE-1523-785FEABCD123");
-BLEService        posServ(POS_UUID_SERV);
-BLEUuid           MAG_UUID_CHAR("00000201-1212-EFDE-1523-785FEABCD123");
+BLEUuid           ENV_UUID_SERV("00000200-1212-EFDE-1523-785FEABCD123");
+BLEService        envServ(ENV_UUID_SERV);
+BLEUuid           BARO_UUID_CHAR("00000201-1212-EFDE-1523-785FEABCD123");
+BLECharacteristic baroChar(BARO_UUID_CHAR);
+BLEUuid           HUMID_UUID_CHAR("00000202-1212-EFDE-1523-785FEABCD123");
+BLECharacteristic humidChar(HUMID_UUID_CHAR);
+
+BLEUuid           MOTION_UUID_SERV("00000300-1212-EFDE-1523-785FEABCD123");
+BLEService        motionServ(MOTION_UUID_SERV);
+BLEUuid           MAG_UUID_CHAR("00000301-1212-EFDE-1523-785FEABCD123");
 BLECharacteristic magChar(MAG_UUID_CHAR);
-BLEUuid           ACCEL_UUID_CHAR("00000202-1212-EFDE-1523-785FEABCD123");
+BLEUuid           ACCEL_UUID_CHAR("00000302-1212-EFDE-1523-785FEABCD123");
 BLECharacteristic accelChar(ACCEL_UUID_CHAR);
-BLEUuid           GYRO_UUID_CHAR("00000203-1212-EFDE-1523-785FEABCD123");
+BLEUuid           GYRO_UUID_CHAR("00000303-1212-EFDE-1523-785FEABCD123");
 BLECharacteristic gyroChar(GYRO_UUID_CHAR);
 
-BLEUuid           OTHER_UUID_SERV("00000300-1212-EFDE-1523-785FEABCD123");
+BLEUuid           OTHER_UUID_SERV("00000400-1212-EFDE-1523-785FEABCD123");
 BLEService        otherServ(OTHER_UUID_SERV);
-BLEUuid           PPG_UUID_CHAR("00000301-1212-EFDE-1523-785FEABCD123");
+BLEUuid           MIC_UUID_CHAR("00000401-1212-EFDE-1523-785FEABCD123");
+BLECharacteristic micChar(MIC_UUID_CHAR);
+BLEUuid           PPG_UUID_CHAR("00000402-1212-EFDE-1523-785FEABCD123");
 BLECharacteristic ppgChar(PPG_UUID_CHAR);
-BLEUuid           GSR_UUID_CHAR("00000302-1212-EFDE-1523-785FEABCD123");
+BLEUuid           GSR_UUID_CHAR("00000403-1212-EFDE-1523-785FEABCD123");
 BLECharacteristic gsrChar(GSR_UUID_CHAR);
 
-char buf[64];
-char temp[32];
+const uint16_t max_len = 20;
+char buf[max_len];
 
 uint8_t proximity;
 uint16_t r, g, b, c;
@@ -70,46 +75,62 @@ const int chipSelect = 10;
 // STARTUP BLOCK
 // ==========================================
 void setupChars() {
-  adpsServ.begin();
+  opticalServ.begin();
   
-  pmChar.setProperties(CHR_PROPS_NOTIFY);
-  pmChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-  pmChar.begin();
+  proxChar.setProperties(CHR_PROPS_NOTIFY);
+  proxChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  proxChar.setMaxLen(max_len);
+  proxChar.begin();
 
   rgbChar.setProperties(CHR_PROPS_NOTIFY);
   rgbChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  rgbChar.setMaxLen(max_len);
   rgbChar.begin();
 
-  tahChar.setProperties(CHR_PROPS_NOTIFY);
-  tahChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-  tahChar.begin();
+  envServ.begin();
 
-  presChar.setProperties(CHR_PROPS_NOTIFY);
-  presChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-  presChar.begin();
+  baroChar.setProperties(CHR_PROPS_NOTIFY);
+  baroChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  baroChar.setMaxLen(max_len);
+  baroChar.begin();
 
-  posServ.begin();
+  humidChar.setProperties(CHR_PROPS_NOTIFY);
+  humidChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  humidChar.setMaxLen(max_len);
+  humidChar.begin();
+
+  motionServ.begin();
   
   magChar.setProperties(CHR_PROPS_NOTIFY);
   magChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  magChar.setMaxLen(max_len);
   magChar.begin();
 
   accelChar.setProperties(CHR_PROPS_NOTIFY);
   accelChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  accelChar.setMaxLen(max_len);
   accelChar.begin();
 
   gyroChar.setProperties(CHR_PROPS_NOTIFY);
   gyroChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  gyroChar.setMaxLen(max_len);
   gyroChar.begin();
 
   otherServ.begin();
 
+  micChar.setProperties(CHR_PROPS_NOTIFY);
+  micChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  micChar.setMaxLen(max_len);
+  micChar.begin();
+
   ppgChar.setProperties(CHR_PROPS_NOTIFY);
   ppgChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  ppgChar.setMaxLen(max_len);
   ppgChar.begin();
 
   gsrChar.setProperties(CHR_PROPS_NOTIFY);
   gsrChar.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  gsrChar.setMaxLen(max_len);
   gsrChar.begin();
 }
 
@@ -126,8 +147,9 @@ void setupBluetooth() {
 
   Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
   Bluefruit.Advertising.addTxPower();
-  Bluefruit.Advertising.addService(adpsServ);
-  Bluefruit.Advertising.addService(posServ);
+  Bluefruit.Advertising.addService(opticalServ);
+  Bluefruit.Advertising.addService(envServ);
+  Bluefruit.Advertising.addService(motionServ);
   Bluefruit.Advertising.addService(otherServ);
 
   Bluefruit.ScanResponse.addName();
@@ -183,7 +205,7 @@ void loop(void) {
 
   temperature = bmp280.readTemperature();
   pressure = bmp280.readPressure();
-  altitude = bmp280.readAltitude(1013.25);
+  altitude = bmp280.readAltitude(1013.25) / 1000;
 
   lis3mdl.read();
   magnetic_x = lis3mdl.x;
@@ -208,80 +230,130 @@ void loop(void) {
 
   gsr_average = getGSR();
 
+  String dataString = "";
+
   Serial.println("\nFeather Sense Sensor Demo");
   Serial.println("---------------------------------------------");
   Serial.print("Proximity: ");
   Serial.println(proximity);
-  Serial.print("Mic: ");
-  Serial.println(mic);
+  dataString += String(proximity);
+  dataString += ",";
   memset(buf,0,strlen(buf));
-  sprintf(buf, "%d %d", proximity, mic);
-  pmChar.notify(buf, strlen(buf));
+  sprintf(buf, "%d", proximity);
+  proxChar.notify(buf, strlen(buf));
   
   Serial.print("Red: ");
   Serial.print(r);
+  dataString += String(r);
+  dataString += ",";
   Serial.print(" Green: ");
   Serial.print(g);
+  dataString += String(g);
+  dataString += ",";
   Serial.print(" Blue :");
   Serial.print(b);
+  dataString += String(b);
+  dataString += ",";
   Serial.print(" Clear: ");
   Serial.println(c);
+  dataString += String(c);
+  dataString += ",";
+
   memset(buf,0,strlen(buf));
   sprintf(buf, "%d %d %d %d", r, g, b, c);
   rgbChar.notify(buf, strlen(buf));
 
   Serial.print("Temperature: ");
   Serial.print(temperature);
+  dataString += String(temperature);
+  dataString += ",";
   Serial.println(" C");
-  Serial.print("Altitude: ");
-  Serial.print(altitude);
-  Serial.println(" m");
-  Serial.print("Humidity: ");
-  Serial.print(humidity);
-  Serial.println(" %");
-  memset(buf,0,strlen(buf));
-  sprintf(buf, "%.2f %.2f %.2f", temperature, altitude, humidity);
-  tahChar.notify(buf, strlen(buf));
-
   Serial.print("Barometric pressure: ");
   Serial.println(pressure);
+  dataString += String(pressure);
+  dataString += ",";
+  Serial.print("Altitude: ");
+  Serial.print(altitude);
+  dataString += String(altitude);
+  dataString += ",";
+  Serial.println(" m");
+
   memset(buf,0,strlen(buf));
-  sprintf(buf, "%.2f", pressure);
-  presChar.notify(buf, strlen(buf));
+  sprintf(buf, "%.2f %.2f %.2f", temperature, pressure, altitude);
+  baroChar.notify(buf, strlen(buf));
   
   Serial.print("Magnetic: ");
   Serial.print(magnetic_x);
   Serial.print(" ");
+  dataString += String(magnetic_x);
+  dataString += ",";
   Serial.print(magnetic_y);
+  dataString += String(magnetic_y);
+  dataString += ",";
   Serial.print(" ");
   Serial.print(magnetic_z);
+  dataString += String(magnetic_z);
+  dataString += ",";
   Serial.println(" uTesla");
+
   memset(buf,0,strlen(buf));
   sprintf(buf, "%.2f %.2f %.2f", magnetic_x, magnetic_y, magnetic_z);
   magChar.notify(buf, strlen(buf));
   
   Serial.print("Acceleration: ");
   Serial.print(accel_x);
+  dataString += String(accel_x);
+  dataString += ",";
   Serial.print(" ");
   Serial.print(accel_y);
+  dataString += String(accel_y);
+  dataString += ",";
   Serial.print(" ");
   Serial.print(accel_z);
+  dataString += String(accel_z);
+  dataString += ",";
   Serial.println(" m/s^2");
+
   memset(buf,0,strlen(buf));
   sprintf(buf, "%.2f %.2f %.2f", accel_x, accel_y, accel_z);
   accelChar.notify(buf, strlen(buf));
 
-  
   Serial.print("Gyro: ");
   Serial.print(gyro_x);
+  dataString += String(gyro_x);
+  dataString += ",";
   Serial.print(" ");
   Serial.print(gyro_y);
+  dataString += String(gyro_y);
+  dataString += ",";
   Serial.print(" ");
   Serial.print(gyro_z);
+  dataString += String(gyro_z);
+  dataString += ",";
   Serial.println(" dps");
+
   memset(buf,0,strlen(buf));
   sprintf(buf, "%.2f %.2f %.2f", gyro_x, gyro_y, gyro_z);
   gyroChar.notify(buf, strlen(buf));
+
+  Serial.print("Humidity: ");
+  Serial.print(humidity);
+  dataString += String(humidity);
+  dataString += ",";
+  Serial.println(" %");
+
+  memset(buf,0,strlen(buf));
+  sprintf(buf, "%.2f", humidity);
+  humidChar.notify(buf, strlen(buf));
+
+  Serial.print("Mic: ");
+  Serial.println(mic);
+  dataString += String(mic);
+  dataString += ",";
+  
+  memset(buf,0,strlen(buf));
+  sprintf(buf, "%d", mic);
+  micChar.notify(buf, strlen(buf));
 
   char snum[5];
   memset(buf,0,strlen(buf));
@@ -300,9 +372,14 @@ void loop(void) {
   
   Serial.print("GSR: ");
   Serial.println(gsr_average);
+  dataString += String(gsr_average);
+
   memset(buf,0,strlen(buf));
   sprintf(buf, "%d", gsr_average);
   gsrChar.notify(buf, strlen(buf));
+
+  datalog(dataString);
+  
   delay(300);
 }
 
@@ -359,6 +436,24 @@ int getGSR() {
     delay(5);
   }
   return sum / bufferLength;
+}
+
+void datalog(String dataString) {
+    // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+  File dataFile = SD.open("datalog.txt", FILE_WRITE);
+
+  // if the file is available, write to it:
+  if (dataFile) {
+    dataFile.println(dataString);
+    dataFile.close();
+    // print to the serial port too:
+    // Serial.println(dataString);
+  }
+  // if the file isn't open, pop up an error:
+  else {
+    Serial.println("error opening datalog.txt");
+  }
 }
 
 void connect_callback(uint16_t conn_handle)
