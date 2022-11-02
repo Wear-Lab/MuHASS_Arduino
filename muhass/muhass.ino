@@ -70,6 +70,8 @@ uint16_t gsrBuffer[bufferLength];
 int gsr_average=0;
 
 const int chipSelect = 10;
+String filename = "log.csv";
+String dataString = "";
 
 // ==========================================
 // STARTUP BLOCK
@@ -160,6 +162,29 @@ void setupBluetooth() {
   Bluefruit.Advertising.start(0);                // 0 = Don't stop advertising after n seconds
 }
 
+void setupSD() {
+  Serial.print("Initializing SD card... ");
+
+  pinMode(13,OUTPUT);
+  digitalWrite(13, LOW);
+
+  if (!SD.begin(chipSelect)) {
+    Serial.println("Card failed, or not present");
+    digitalWrite(13, HIGH);
+  } else {
+    Serial.println("card initialized.");
+  }
+
+  int i = 0;
+  while(SD.exists(filename)) {
+    filename = "log" + String(i) + ".csv";
+    i++;
+  }
+
+  Serial.println("Created new log file " + filename);
+  initFile();
+}
+
 void setup(void) {
   Serial.begin(115200);
   // while (!Serial) delay(10);
@@ -181,15 +206,7 @@ void setup(void) {
     gsrBuffer[i] = analogRead(GSR);
   }
 
-  Serial.print("Initializing SD card... ");
-
-  if (!SD.begin(chipSelect)) {
-    Serial.println("Card failed, or not present");
-    delay(5000);
-  } else {
-    Serial.println("card initialized.");
-  }
-
+  setupSD();
   setupBluetooth();
 }
 
@@ -230,7 +247,7 @@ void loop(void) {
 
   gsr_average = getGSR();
 
-  String dataString = "";
+  dataString += millis();
 
   Serial.println("\nFeather Sense Sensor Demo");
   Serial.println("---------------------------------------------");
@@ -378,7 +395,7 @@ void loop(void) {
   sprintf(buf, "%d", gsr_average);
   gsrChar.notify(buf, strlen(buf));
 
-  datalog(dataString);
+  writeFile (filename, dataString);
   
   delay(300);
 }
@@ -438,10 +455,10 @@ int getGSR() {
   return sum / bufferLength;
 }
 
-void datalog(String dataString) {
+void writeFile(String filename, String dataString) {
     // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
-  File dataFile = SD.open("datalog.txt", FILE_WRITE);
+  File dataFile = SD.open(filename, FILE_WRITE);
 
   // if the file is available, write to it:
   if (dataFile) {
@@ -452,8 +469,63 @@ void datalog(String dataString) {
   }
   // if the file isn't open, pop up an error:
   else {
-    Serial.println("error opening datalog.txt");
+    Serial.println("error opening " + filename);
+    digitalWrite(13, HIGH);
   }
+}
+
+void initFile() {
+  dataString = "";
+
+  dataString += "millis";
+  dataString += ",";
+  dataString += "proximity";
+  dataString += ",";
+  dataString += "red";
+  dataString += ",";
+  dataString += "green";
+  dataString += ",";
+  dataString += "blue";
+  dataString += ",";
+  dataString += "clear";
+  dataString += ",";
+  dataString += "temperature";
+  dataString += ",";
+  dataString += "pressure";
+  dataString += ",";
+  dataString += "altitude";
+  dataString += ",";
+  dataString += "mag_x";
+  dataString += ",";
+  dataString += "mag_y";
+  dataString += ",";
+  dataString += "mag_z";
+  dataString += ",";
+  dataString += "accel_x";
+  dataString += ",";
+  dataString += "accel_y";
+  dataString += ",";
+  dataString += "accel_z";
+  dataString += ",";
+  dataString += "gyro_x";
+  dataString += ",";
+  dataString += "gyro_y";
+  dataString += ",";
+  dataString += "gyro_z";
+  dataString += ",";
+  dataString += "humidity";
+  dataString += ",";
+  dataString += "mic";
+  dataString += ",";
+  dataString += "heartrate";
+  dataString += ",";
+  dataString += "confidence";
+  dataString += ",";
+  dataString += "oxygen";
+  dataString += ",";
+  dataString += "status";
+  dataString += ",";
+  dataString += "gsr";
 }
 
 void connect_callback(uint16_t conn_handle)
