@@ -6,6 +6,7 @@
 #include <Adafruit_Sensor.h>
 #include <bluefruit.h>
 #include <PDM.h>
+#include <RTClib.h>
 #include <SPI.h>
 #include <SD.h>
 
@@ -14,6 +15,8 @@ Adafruit_BMP280 bmp280;     // temperautre, barometric pressure
 Adafruit_LIS3MDL lis3mdl;   // magnetometer
 Adafruit_LSM6DS33 lsm6ds33; // accelerometer, gyroscope
 Adafruit_SHT31 sht30;       // humidity
+
+RTC_PCF8523 rtc;            // real time clock
 
 BLEUuid           OPTICAL_UUID_SERV("00000100-1212-EFDE-1523-785FEABCD123");
 BLEService        opticalServ(OPTICAL_UUID_SERV);
@@ -162,6 +165,21 @@ void setupBluetooth() {
   Bluefruit.Advertising.start(0);                // 0 = Don't stop advertising after n seconds
 }
 
+void setupRTC() {
+  if (!rtc.begin()) {
+    Serial.println("RTC Failed!");
+    digitalWrite(13, HIGH);
+  } else {
+    Serial.println("RTC initialized.");
+  }
+
+  if (! rtc.initialized() || rtc.lostPower()) {
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }
+
+  rtc.start();
+}
+
 void setupSD() {
   Serial.print("Initializing SD card... ");
 
@@ -206,6 +224,8 @@ void setup(void) {
     gsrBuffer[i] = analogRead(GSR);
   }
 
+  setupRTC();
+
   setupSD();
   setupBluetooth();
 }
@@ -247,7 +267,12 @@ void loop(void) {
 
   gsr_average = getGSR();
 
+  DateTime now = rtc.now();
+  dataString += now.unixtime();
+  dataString += ",";
+
   dataString += millis();
+  dataString += ",";
 
   Serial.println("\nFeather Sense Sensor Demo");
   Serial.println("---------------------------------------------");
@@ -477,6 +502,8 @@ void writeFile(String filename, String dataString) {
 void initFile() {
   dataString = "";
 
+  dataString += "time";
+  dataString += ",";
   dataString += "millis";
   dataString += ",";
   dataString += "proximity";

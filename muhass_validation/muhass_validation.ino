@@ -4,9 +4,11 @@
 #include <Adafruit_LIS3MDL.h>
 #include <Adafruit_LSM6DS33.h>
 #include <Adafruit_Sensor.h>
+#include <RTClib.h>
 
 Adafruit_LSM6DS33 lsm6ds33; // accelerometer, gyroscope
-Adafruit_LIS3MDL lis3mdl;   // magnetometer
+
+RTC_PCF8523 rtc;
 
 const int chipSelect = 10;
 
@@ -18,21 +20,30 @@ void setup() {
   pinMode(13,OUTPUT);
   digitalWrite(13,LOW);
 
-  while (!SD.begin(chipSelect)) {
+  while (!SD.begin(chipSelect) || !rtc.begin()) {
     digitalWrite(13,HIGH);
   }
 
+  if (! rtc.initialized() || rtc.lostPower()) {
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }
   int i = 0;
   while(SD.exists(filename)) {
     filename = "log" + String(i) + ".csv";
     i++;
   }
 
+  rtc.start();
+
   initFile();
 }
 
 void loop() {
   String dataString = "";
+
+  DateTime now = rtc.now();
+  dataString += now.unixtime();
+  dataString += ",";
 
   dataString += millis();
   dataString += ",";
@@ -53,13 +64,7 @@ void loop() {
   dataString += ",";
   dataString += gyro.gyro.z;
   dataString += ",";
-
-  lis3mdl.read();
-  dataString += lis3mdl.x;
-  dataString += ",";
-  dataString += lis3mdl.y;
-  dataString += ",";
-  dataString += lis3mdl.z;
+  dataString += temp.temperature;
 
   writeFile (filename, dataString);
 }
@@ -81,6 +86,8 @@ void writeFile (String filename, String dataString) {
 void initFile () {
   dataString = "";
 
+  dataString += "time";
+  dataString += ",";
   dataString += "millis";
   dataString += ",";
   dataString += "accel.x";
@@ -95,11 +102,7 @@ void initFile () {
   dataString += ",";
   dataString += "gyro.z";
   dataString += ",";
-  dataString += "mag.x";
-  dataString += ",";
-  dataString += "mag.y";
-  dataString += ",";
-  dataString += "mag.z";
+  dataString += "temp";
 
   writeFile(filename, dataString);
 }
