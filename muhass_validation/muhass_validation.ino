@@ -20,7 +20,7 @@ void setup() {
   pinMode(13,OUTPUT);
   digitalWrite(13,LOW);
 
-  while (!SD.begin(chipSelect) || !rtc.begin()) {
+  while (!SD.begin(chipSelect) || !rtc.begin() || !lsm6ds33.begin_I2C()) {
     digitalWrite(13,HIGH);
   }
 
@@ -42,7 +42,7 @@ void loop() {
   String dataString = "";
 
   DateTime now = rtc.now();
-  dataString += now.unixtime();
+  dataString += now.unixtime() + 14400;
   dataString += ",";
 
   dataString += millis();
