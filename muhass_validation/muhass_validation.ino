@@ -1,7 +1,6 @@
 #include <SPI.h>
 #include <SD.h>
 
-#include <Adafruit_LIS3MDL.h>
 #include <Adafruit_LSM6DS33.h>
 #include <Adafruit_Sensor.h>
 #include <RTClib.h>
